@@ -11,6 +11,7 @@ setup(
     url = "http://pypi.python.org/pypi/isotoma.recipe.slapd",
     classifiers = [
         "Framework :: Buildout",
+        "Framework :: Buildout :: Recipe",
         "Intended Audience :: System Administrators",
         "Operating System :: POSIX",
         "License :: OSI Approved :: Apache Software License",
