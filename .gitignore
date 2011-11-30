@@ -1,0 +1,8 @@
+.installed.cfg
+bin/
+develop-eggs/
+eggs/
+isotoma.recipe.ldap.egg-info/
+*.pyc
+parts/
+var/

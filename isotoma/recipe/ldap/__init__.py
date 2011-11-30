@@ -53,16 +53,16 @@ class Slapd(object):
             pidfile = os.path.join(self.buildout['buildout']['directory'], "var", "%s.pid" % self.name)
 
         self.options.setdefault('pidfile', pidfile)
-        self.options.setdefault('directory', os.path.join(self.buildout['buildout']['directory'], 'var', self.name)
+        self.options.setdefault('directory', os.path.join(self.buildout['buildout']['directory'], 'var', self.name))
         self.options.setdefault('executable', '/usr/sbin/slapd')
         self.options.setdefault('user', 'openldap')
         self.options.setdefault('group', 'openldap')
         self.options.setdefault('template', sibpath("slapd.conf.j2"))
-        self.options.setdefault('indexes', '')
+        self.options.setdefault('indexes', 'objectClass eq')
 
         self.options["__hashes_template"] = sha1(open(self.options["template"]).read()).hexdigest()
 
-    def fill_template(self, template, **kwargs):
+    def fill_template(self, template, args):
         dirname, basename = os.path.split(self.options['template'])
         loader = ChoiceLoader([
             FileSystemLoader(dirname),
@@ -71,37 +71,46 @@ class Slapd(object):
         e = Environment(loader=loader)
         e.globals = dict(to_list=to_list)
         template = e.get_template(basename)
-        return template.render(kwargs)
+        return template.render(args)
 
     def install(self):
         if not os.path.isdir(self.outputdir):
             os.mkdir(self.outputdir)
 
         # Create the slapd config file
-        config = self.fill_template(self.options['template'], **self.options)
-        open(self.cfgfile, 'w').write(conf)
+        config = self.fill_template(self.options['template'], self.options)
+        open(self.cfgfile, 'w').write(config)
         self.options.created(self.cfgfile)
 
         # Create a bin/slapd
         self.runscript()
 
+        # Try and create the database directory
+        # WE SPECIFICALLY DONT ADD THIS TO THE LIST OF BUILDOUT CREATED FILES!!
+        if not os.path.exists(self.options['directory']):
+            try:
+                os.makedirs(self.options['directory'])
+            except OSError:
+                print "WARNING: '%s' not created, slapd will not start until it exists and is owned by the correct user" % self.options['directory']
+
+
         return self.options.created()
-        
+
     def runscript(self):
         target = os.path.join(self.buildout["buildout"]["bin-directory"], self.name)
-        args = '-f "%s" -u %s -g %s -h ldaps:///' % (self.cfgfile, self.options['pidfile'], self.options['user'], self.options['group'])
+        args = '-f "%s" -u %s -g %s -h ldaps:///' % (self.cfgfile, self.options['user'], self.options['group'])
 
         gc = gocaptain.Automatic()
-        gc.write(open(target, "wt"), 
-            daemon=self.options['executable'], 
-            args=args, 
-            pidfile=self.pidfile, 
+        gc.write(open(target, "wt"),
+            daemon=self.options['executable'],
+            args=args,
+            pidfile=self.options['pidfile'],
             name=self.name, 
             description="%s daemon" % self.name)
 
         os.chmod(target, 0755)
         self.options.created(target)
-        
+
     def update(self):
         pass
 

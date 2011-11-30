@@ -1,4 +1,4 @@
-{% for include in includes %}
+{% for include in to_list(includes) %}
 include		{{ include }}
 {% endfor %}
 
@@ -13,12 +13,12 @@ suffix		"dc=localhost"
 
 directory	{{ directory }}
 
-dbconfig	set_cachesize		268435456
+dbconfig	set_cachesize		0 268435456 1
 dbconfig	set_lg_regionmax	262144
 dbconfig	set_lg_bsize		2097152
 
 #index		objectClass eq
-{% for index in indexes %}
+{% for index in to_list(indexes) %}
 index		{{ index }}
 {% endfor %}
 
