@@ -1,0 +1,24 @@
+{% for include in includes %}
+include		{{ include }}
+{% endfor %}
+
+pidfile		{{ pidfile }}
+
+allow		bind_v2
+modulepath	/usr/lib/ldap
+moduleload	back_bdb
+database	bdb
+
+suffix		"dc=localhost"
+
+directory	{{ directory }}
+
+dbconfig	set_cachesize		268435456
+dbconfig	set_lg_regionmax	262144
+dbconfig	set_lg_bsize		2097152
+
+#index		objectClass eq
+{% for index in indexes %}
+index		{{ index }}
+{% endfor %}
+
